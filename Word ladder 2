@@ -1,16 +1,17 @@
 class Solution(object):
+    # Fist solution: single End BFS
     def EndBFS(self, beginWord, endWord, unvisited, dictionary):
-        flagFound = 0
+        flagFound = False
+        unvisited.add(beginWord)
         unvisited.remove(endWord)
-        queue = [endWord]
+        queue = set()
+        queue.add(endWord)
         
-        while flagFound == 0 and len(queue) != 0:
+        while not flagFound and len(queue) != 0:
             samelevel = set()
-            for k in range(len(queue)):
-                word = queue.pop(0)
-                
+            for word in queue:
                 if word == beginWord:
-                    flagFound = 1
+                    flagFound = True
                    
                 for i in range(len(word)):
                     left = word[:i]
@@ -22,12 +23,49 @@ class Solution(object):
                             dictionary[nextWord].append(word)
                             if nextWord not in samelevel:
                                 samelevel.add(nextWord)
-                                queue.append(nextWord)
-                            
-               
-            for word in samelevel:
-                unvisited.remove(word)
+                                
+            queue = samelevel
+            unvisited -= samelevel
+    # Second solution: Double End BFS        
+    def DoubleEndBFS(self, beginWord, endWord, unvisited, dictionary):
+        flagFound = False
+        flagSwitch = True
+        
+        BeginSet = set()
+        BeginSet.add(beginWord)
+        EndSet = set()
+        EndSet.add(endWord)
        
+        while not flagFound and len(EndSet)!= 0 :
+            samelevel = set()
+            unvisited -= EndSet
+            
+            for word in EndSet:
+                for i in range(len(word)):
+                    left = word[:i]
+                    right = word[i+1:]
+                    
+                    for c in 'abcdefghijklmnopqrstuvwxyz':
+                        nextWord = left + c + right
+                        if c != word[i] and nextWord in unvisited:
+                            if flagSwitch:
+                                dictionary[nextWord].append(word)
+                            else:
+                                dictionary[word].append(nextWord)
+                            
+                            if nextWord not in samelevel:
+                                samelevel.add(nextWord)
+                           
+            EndSet = samelevel
+           
+            if BeginSet & EndSet:
+                flagFound = True
+                break
+                
+            if len(EndSet) > len(BeginSet):
+                flagSwitch = not flagSwitch
+                BeginSet, EndSet = EndSet, BeginSet
+
         
     def BeginDFS(self, begin, end, dictionary, results, path):
         if begin == end:
@@ -35,10 +73,7 @@ class Solution(object):
            return
             
         for nextnode in dictionary[begin]:
-            path.append(nextnode)
-            self.BeginDFS(nextnode, end, dictionary, results, path)
-            path.pop()
-        
+            self.BeginDFS(nextnode, end, dictionary, results, path + [nextnode])
         
     def findLadders(self, beginWord, endWord, wordList):
         """
@@ -48,21 +83,21 @@ class Solution(object):
         :rtype: List[List[str]]
         """
     
-        wordList.append(beginWord)
         unvisited = set(wordList)
-       
         if endWord not in unvisited:
             return []
             
         dictionary = collections.defaultdict(list)
-        flagFound = self.EndBFS(beginWord, endWord, unvisited, dictionary)
-        if flagFound == 0:
+        flagFound = self.DoubleEndBFS(beginWord, endWord, unvisited, dictionary)
+        
+        #flagFound = self.EndBFS(beginWord, endWord, unvisited, dictionary)
+        if flagFound:
             return []
-            
+        
+  
         path = [beginWord]
         results = []
         
         self.BeginDFS(beginWord, endWord, dictionary, results, path)
         
         return results
-            
