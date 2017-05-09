@@ -1,0 +1,68 @@
+class Solution(object):
+    def EndBFS(self, beginWord, endWord, unvisited, dictionary):
+        flagFound = 0
+        unvisited.remove(endWord)
+        queue = [endWord]
+        
+        while flagFound == 0 and len(queue) != 0:
+            samelevel = set()
+            for k in range(len(queue)):
+                word = queue.pop(0)
+                
+                if word == beginWord:
+                    flagFound = 1
+                   
+                for i in range(len(word)):
+                    left = word[:i]
+                    right = word[i+1:]
+                    
+                    for c in 'abcdefghijklmnopqrstuvwxyz':
+                        nextWord = left + c + right
+                        if c != word[i] and nextWord in unvisited:
+                            dictionary[nextWord].append(word)
+                            if nextWord not in samelevel:
+                                samelevel.add(nextWord)
+                                queue.append(nextWord)
+                            
+               
+            for word in samelevel:
+                unvisited.remove(word)
+       
+        
+    def BeginDFS(self, begin, end, dictionary, results, path):
+        if begin == end:
+           results.append(list(path))
+           return
+            
+        for nextnode in dictionary[begin]:
+            path.append(nextnode)
+            self.BeginDFS(nextnode, end, dictionary, results, path)
+            path.pop()
+        
+        
+    def findLadders(self, beginWord, endWord, wordList):
+        """
+        :type beginWord: str
+        :type endWord: str
+        :type wordList: List[str]
+        :rtype: List[List[str]]
+        """
+    
+        wordList.append(beginWord)
+        unvisited = set(wordList)
+       
+        if endWord not in unvisited:
+            return []
+            
+        dictionary = collections.defaultdict(list)
+        flagFound = self.EndBFS(beginWord, endWord, unvisited, dictionary)
+        if flagFound == 0:
+            return []
+            
+        path = [beginWord]
+        results = []
+        
+        self.BeginDFS(beginWord, endWord, dictionary, results, path)
+        
+        return results
+            
